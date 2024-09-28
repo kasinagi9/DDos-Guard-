@@ -1,0 +1,240 @@
+admin@parry-this# show firewall 
+family inet {
+    filter block-small-udp {
+        term block-short-udp {
+            from {
+                packet-length 3;
+                protocol udp;
+            }
+            then {
+                discard;
+            }
+        }
+        term allow-others {
+            then accept;
+        }
+    }
+    filter PROTECT-SYN {
+        term SYN-FLOOD {
+            from {
+                protocol tcp;
+                tcp-flags syn;
+            }
+            then {
+                policer SYN-FLOOD-LIMIT;
+                accept;                 
+            }                           
+        }                               
+    }                                   
+    filter udp-filter {                 
+        term allow-long-udp {           
+            from {                      
+                packet-length 60;       
+                protocol udp;           
+            }                           
+        }                               
+    }                                   
+    filter syn-ack-filter {             
+        term syn-ack {                  
+            from {                      
+                packet-length 40-70;    
+                tcp-flags syn;          
+            }                           
+            then accept;                
+        }                               
+    }                                   
+    filter SYN-TRACK {                  
+        term SYN-PACKETS {              
+            from {                      
+                packet-length 70-1514;  
+                protocol tcp;           
+                tcp-flags syn;          
+            }                           
+        }                               
+        term DEFAULT {                  
+            then {                      
+                discard;                
+            }                           
+        }                               
+    }                                   
+    filter smtp-allow {                 
+        term smtp-allow {               
+            from {
+                destination-prefix-list {
+                    smtp-list;
+                }
+                protocol [ tcp udp ];
+                destination-port [ smtp 443 25 ];
+            }
+            then accept;
+        }
+    }
+    filter tcpUdp_132 {
+        term tcpUdp_132 {
+            from {
+                destination-prefix-list {
+                    tcpUdp_132;
+                }
+                protocol [ tcp udp ];
+                destination-port 53;
+            }
+            then accept;
+        }
+    }
+    filter allow_tcp3788_11100 {
+        term allow_tcp3788_11100 {
+            from {
+                destination-prefix-list {
+                    tcp_3788;
+                }
+                protocol tcp;
+                source-port 11100-11131;
+                destination-port [ 3788 4444 5111-5117 ];
+            }
+        }
+    }
+    filter tcp_132_40111 {
+        term tcp_132_40111 {
+            from {
+                destination-prefix-list {
+                    tcp_132_40111;
+                }
+                protocol tcp;
+                source-port [ 40111 40111-40110 42111-42110 43111-43110 44111-44110 45111-45110 38111-38110 ];
+                destination-port [ 40111 42111 43111 44111 45111 ];
+            }
+        }
+    }
+    filter allow_140 {
+        term allow_140 {
+            from {
+                destination-address {
+                    113.13.223.140/32;
+                }
+                protocol tcp;
+                source-port [ 33777 11100-11131 5112-5117 ];
+                destination-port [ 3788 4444 5111-5117 ];
+            }
+            then accept;
+        }                               
+    }
+    filter udp_133 {
+        term udp_133 {
+            from {
+                destination-prefix-list {
+                    udp_133;
+                }
+                protocol [ udp tcp ];
+                destination-port 53;
+            }
+            then accept;
+        }
+    }
+    filter allow_84 {
+        term allow_84 {
+            from {
+                destination-address {
+                    113.13.223.84/32;
+                }
+                protocol [ udp tcp esp icmp ];
+                destination-port [ 264 265 9996 981 ssh 4500 500 259 2746 ];
+            }
+            then accept;
+        }
+    }
+    filter allow_94 {
+        term allow_94 {
+            from {
+                destination-address {
+                    113.13.223.94/32;
+                }
+                protocol tcp;
+                destination-port [ 80 443 ];
+            }
+            then accept;
+        }
+    }
+    filter tcp_133_30112 {
+        term tcp_133_30112 {
+            from {
+                destination-address {
+                    113.13.133.163/32;
+                }
+                protocol tcp;
+                destination-port [ 50112 40112 30112 ];
+            }
+            then accept;
+        }
+    }
+    filter tcp_133_130 {
+        term tcp_133_130 {
+            from {
+                destination-address {
+                    113.13.133.130/32;
+                }
+                protocol tcp;
+                destination-port [ 80 443 ldap 30112 41021 50112 ];
+            }                           
+            then accept;
+        }
+    }
+    filter allow_6 {
+        term allow_6 {
+            from {
+                protocol gre;
+            }
+            then accept;
+        }
+    }
+    filter allow_esp_1500 {
+        term allow_esp_1500 {
+            from {
+                destination-prefix-list {
+                    esp_1500;
+                }
+                protocol [ esp icmp ];
+                source-port [ 1500 3500 ];
+            }
+            then accept;
+        }
+    }
+    filter allow_105 {
+        term allow_105 {
+            from {
+                destination-address {
+                    113.13.223.105/32;
+                }
+                protocol [ gre esp ah icmp ];
+                source-port [ 1500 3500 ];
+            }
+            then accept;
+        }
+    }
+    filter tcp_132_443_80 {
+        term tcp_132_443_80 {
+            from {
+                destination-prefix-list {
+                    tcp_132_443_80;
+                }
+                protocol tcp;
+            }
+        }
+    }
+    filter allow_tcp3768_11100 {
+        term allow_tcp3768_11100 {
+            then accept;
+        }
+    }
+    filter allow_tcp132_40111 {
+        term allow_tcp132_40111 {
+            then accept;
+        }
+    }
+}
+policer SYN-FLOOD-LIMIT {
+    if-exceeding {                      
+        bandwidth-limit 1m;
+        burst-size-limit 1500;
+    }
+    then discard;
+}
